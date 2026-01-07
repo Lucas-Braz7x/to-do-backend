@@ -1,16 +1,15 @@
 Model Usuário:
 
-<!-- 
+<!--
 id
 email
 name
-password 
+password
 -->
 
-
-[ ] - Cadastro com e-mail e senha
-[ ] - Login com e-mail e senha
-[ ] - Autenticação com JWT ou Cookies
+[x] Cadastro com e-mail e senha
+[x] Login com e-mail e senha
+[x] Autenticação com JWT ou Cookies
 
 Model Tarefas:
 
@@ -23,18 +22,20 @@ data de criação e última modificação
 Relação usuário
 -->
 
-[ ] - Criar
-[ ] - editar
-[ ] - deletar
-[ ] - listar tarefas - Listar apenas tarefas do usuário autenticado
+[x] Criar
+[x] editar
+[x] deletar
+[x] listar tarefas - Listar apenas tarefas do usuário autenticado
 
-[ ] - CI/CD (Docker, testes...)
+[ ] CI/CD
+[ ] Docker
+[x] Testes
 
 ---
 
 Tech:
 
-[ ] - Nestjs
-[ ] - Postgres
-[ ] - Prisma
-[ ] - Jest
+[x] Nestjs
+[x] Postgres
+[x] Prisma
+[x] Jest
