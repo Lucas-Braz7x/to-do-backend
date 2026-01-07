@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-export default async function globalTeardown(): Promise<void> {
+export default function globalTeardown(): void {
   // Carrega variáveis do .env.test
   dotenv.config({ path: path.resolve(__dirname, '../../.env.test') });
 

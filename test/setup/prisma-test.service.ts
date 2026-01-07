@@ -36,10 +36,7 @@ class PrismaTestClient extends PrismaClient {
   async cleanDatabase(): Promise<void> {
     // Ordem importa devido às foreign keys
     // Deleta primeiro as tabelas que dependem de outras
-    await this.$transaction([
-      this.task.deleteMany(),
-      this.user.deleteMany(),
-    ]);
+    await this.$transaction([this.task.deleteMany(), this.user.deleteMany()]);
   }
 
   /**
@@ -53,10 +50,7 @@ class PrismaTestClient extends PrismaClient {
    * Limpa apenas a tabela de usuários (e tarefas associadas)
    */
   async cleanUsers(): Promise<void> {
-    await this.$transaction([
-      this.task.deleteMany(),
-      this.user.deleteMany(),
-    ]);
+    await this.$transaction([this.task.deleteMany(), this.user.deleteMany()]);
   }
 
   /**
