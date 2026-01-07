@@ -6,12 +6,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
-  binaryTargets = "native"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum TaskStatus {
@@ -34,14 +33,15 @@ model User {
 }
 
 model Task {
-  id        String   @id @default(uuid())
-  title     String
+  id          String     @id @default(uuid())
+  title       String
   description String
   status      TaskStatus
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
 
   @@map("tarefas")
   @@index([userId])
