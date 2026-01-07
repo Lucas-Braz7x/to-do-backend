@@ -58,3 +58,7 @@ jobs:
 
       - name: E2E Tests
         run: yarn test:e2e
+
+      - name: Deploy to Render
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
