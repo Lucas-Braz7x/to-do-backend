@@ -58,10 +58,4 @@ export class TasksController {
     const task = await this.tasksService.restore(id);
     return task;
   }
-
-  @Get('deleted/all')
-  async findDeleted(@CurrentUser('id') userId: string): Promise<Task[]> {
-    const tasks = await this.tasksService.findDeleted(userId);
-    return tasks;
-  }
 }
