@@ -1,0 +1,28 @@
+# Dockerfile para Desenvolvimento
+# Otimizado para hot-reload e debugging
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Instala dependências do sistema necessárias
+RUN apk add --no-cache openssl
+
+# Copia arquivos de dependências
+COPY package.json yarn.lock ./
+
+# Instala todas as dependências (incluindo devDependencies)
+RUN yarn install
+
+# Copia o schema do Prisma e gera o client
+COPY prisma ./prisma/
+RUN npx prisma generate
+
+# Os arquivos fonte serão montados via volume no docker-compose
+# para permitir hot-reload
+
+EXPOSE ${PORT:-3000}
+EXPOSE 9229
+
+# Comando padrão para desenvolvimento com hot-reload
+CMD ["sh", "-c", "npx prisma migrate dev --skip-generate && yarn start:dev"]

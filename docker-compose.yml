@@ -10,14 +10,42 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: desafio_db
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - desafio-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: desafio-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/desafio_db
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-key-change-in-production}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      PORT: ${PORT:-3000}
+      NODE_ENV: development
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'
+      - '9229:9229'
+    volumes:
+      - ./src:/app/src:delegated
+      - ./prisma:/app/prisma:delegated
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./tsconfig.build.json:/app/tsconfig.build.json:ro
+      - ./nest-cli.json:/app/nest-cli.json:ro
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - desafio-network
 
