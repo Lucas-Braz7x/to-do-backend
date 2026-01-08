@@ -6,7 +6,7 @@ export const createTaskSchema = z.object({
     .string({ error: 'Título é obrigatório' })
     .min(1, { error: 'Título é obrigatório' }),
   description: z.string().optional(),
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING'),
+  status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).optional(),
 });
 
 export class CreateTaskDto extends createZodDto(createTaskSchema) {}
