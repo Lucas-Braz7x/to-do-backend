@@ -6,9 +6,11 @@ API RESTful para gerenciamento de tarefas com autenticação JWT, construída co
 
 - [Visão Geral](#visão-geral)
 - [Tecnologias](#tecnologias)
+- [Padrões de Projeto](#padrões-de-projeto)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Instalação](#instalação)
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Documentação da API (Swagger)](#documentação-da-api-swagger)
 - [Banco de Dados](#banco-de-dados)
 - [Endpoints da API](#endpoints-da-api)
 - [Autenticação](#autenticação)
@@ -29,8 +31,11 @@ Principais características:
 
 - ✅ Autenticação JWT
 - ✅ Soft delete de tarefas (com possibilidade de restauração)
-- ✅ Validação de dados com class-validator
+- ✅ Validação de dados com Zod
+- ✅ Documentação Swagger/OpenAPI interativa
+- ✅ Arquitetura modular com padrões de projeto (Repository, DI, DTO)
 - ✅ Testes unitários e E2E
+- ✅ Docker Compose para desenvolvimento
 - ✅ Pronto para deploy no Render
 
 ---
@@ -46,6 +51,69 @@ Principais características:
 | **bcrypt**     | ^6.0.0  | Hash de senhas                                |
 | **Jest**       | ^30.0.0 | Framework de testes                           |
 | **TypeScript** | ^5.7.3  | Superset tipado de JavaScript                 |
+| **Swagger**    | ^11.2.4 | Documentação interativa da API (OpenAPI)      |
+
+---
+
+## Padrões de Projeto
+
+Este projeto segue diversos padrões de projeto e boas práticas para garantir código limpo, testável e de fácil manutenção.
+
+### 🏗️ Arquitetura Modular
+
+O projeto utiliza a **arquitetura modular do NestJS**, onde cada domínio da aplicação (auth, tasks, users) é encapsulado em seu próprio módulo com responsabilidades bem definidas.
+
+```
+modules/
+├── auth/           # Domínio de autenticação
+├── tasks/          # Domínio de tarefas
+├── users/          # Domínio de usuários
+└── prisma/         # Infraestrutura de banco de dados
+```
+
+### 📐 Padrões Utilizados
+
+| Padrão                         | Descrição                                                                          | Onde é usado                            |
+| ------------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------- |
+| **Repository Pattern**         | Abstração da camada de acesso a dados, desacoplando a lógica de negócio do ORM     | `TaskRepository`, `UserRepository`      |
+| **Dependency Injection**       | Inversão de controle para injeção de dependências, facilitando testes e manutenção | Todo o projeto via decorators do NestJS |
+| **DTO (Data Transfer Object)** | Objetos para transferência de dados entre camadas, com validação                   | `CreateTaskDto`, `LoginDto`, etc.       |
+| **Guard Pattern**              | Proteção de rotas com lógica de autorização encapsulada                            | `JwtAuthGuard`                          |
+| **Strategy Pattern**           | Algoritmos de autenticação intercambiáveis                                         | `JwtStrategy` (Passport.js)             |
+| **Decorator Pattern**          | Metadados e comportamentos adicionados via decorators                              | `@CurrentUser`, `@Public`               |
+| **Soft Delete**                | Exclusão lógica preservando dados para auditoria/recuperação                       | Campo `deletedAt` em tarefas            |
+
+### 🎯 Princípios SOLID
+
+- **S** - Single Responsibility: Cada classe tem uma única responsabilidade (Service para lógica, Repository para dados, Controller para HTTP)
+- **O** - Open/Closed: Módulos extensíveis via decorators e providers sem modificar código existente
+- **L** - Liskov Substitution: DTOs e entities seguem contratos definidos
+- **I** - Interface Segregation: Interfaces específicas para cada contexto
+- **D** - Dependency Inversion: Dependências injetadas via construtor, facilitando mocks em testes
+
+### 🔒 Segurança
+
+| Prática                    | Implementação                                             |
+| -------------------------- | --------------------------------------------------------- |
+| **Hash de senhas**         | bcrypt com salt rounds                                    |
+| **Autenticação stateless** | JWT com expiração configurável                            |
+| **Validação de entrada**   | Zod schemas com mensagens de erro customizadas            |
+| **CORS configurável**      | Origens permitidas via variável de ambiente               |
+| **Guard global**           | Todas as rotas protegidas por padrão (exceto `@Public()`) |
+
+### 📁 Convenções de Nomenclatura
+
+```
+src/modules/<domínio>/
+├── dto/              # Data Transfer Objects (create-*.dto.ts, update-*.dto.ts)
+├── entities/         # Entidades de domínio (*.entity.ts)
+├── presentation/     # Controllers (*.controller.ts)
+├── repositories/     # Repositórios (*.repository.ts)
+├── services/         # Lógica de negócio (*.service.ts)
+├── guards/           # Guards de autorização (*.guard.ts)
+├── decorators/       # Decorators customizados (*.decorator.ts)
+└── strategies/       # Estratégias de autenticação (*.strategy.ts)
+```
 
 ---
 
@@ -154,6 +222,62 @@ A API estará disponível em `http://localhost:3000`
 | `JWT_SECRET`   | Chave secreta para assinar tokens JWT | `sua-chave-secreta-muito-segura`                           |
 | `PORT`         | Porta da aplicação (opcional)         | `3000`                                                     |
 | `NODE_ENV`     | Ambiente de execução                  | `development` \| `production`                              |
+| `CORS_ORIGIN`  | Origens permitidas para CORS          | `*` ou `https://meusite.com`                               |
+
+---
+
+## Documentação da API (Swagger)
+
+A API possui documentação interativa gerada automaticamente com **Swagger/OpenAPI**.
+
+### 📍 Acessando a Documentação
+
+Após iniciar a aplicação, acesse:
+
+```
+http://localhost:3000/api/docs
+```
+
+### 🐳 Com Docker
+
+Se estiver usando Docker Compose, a documentação estará disponível na mesma URL:
+
+```bash
+# Inicie os containers
+docker-compose up -d
+
+# Acesse a documentação
+http://localhost:3000/api/docs
+```
+
+### 🔐 Autenticação no Swagger
+
+Para testar endpoints protegidos diretamente no Swagger:
+
+1. Execute o login via `POST /auth/login` ou registre-se via `POST /auth/register`
+2. Copie o `accessToken` retornado
+3. Clique no botão **"Authorize"** (🔓) no topo da página
+4. Cole o token no campo (sem o prefixo "Bearer")
+5. Clique em **"Authorize"** e depois **"Close"**
+
+Agora você pode testar todos os endpoints autenticados!
+
+### 📋 Recursos da Documentação
+
+| Recurso        | Descrição                                     |
+| -------------- | --------------------------------------------- |
+| **Schemas**    | Visualização dos DTOs com exemplos de valores |
+| **Try it out** | Teste endpoints diretamente no navegador      |
+| **Responses**  | Exemplos de respostas para cada código HTTP   |
+| **Models**     | Definição completa das entidades              |
+
+### 🏷️ Tags Organizacionais
+
+A API está organizada em tags para facilitar a navegação:
+
+- **auth** - Endpoints de autenticação (register, login, me)
+- **tasks** - Gerenciamento de tarefas (CRUD + restore)
+- **users** - Gerenciamento de usuários
 
 ---
 
@@ -594,18 +718,48 @@ O projeto está configurado para deploy no Render via `render.yaml`.
 
 ### Docker
 
-Para desenvolvimento local com Docker:
+O projeto inclui configuração completa para Docker com hot-reload em desenvolvimento.
+
+#### Ambiente completo (API + PostgreSQL)
 
 ```bash
-# Subir apenas o banco de dados
+# Iniciar todos os serviços
 docker-compose up -d
 
+# Ver logs da API
+docker-compose logs -f api
+
+# Reconstruir após mudanças no package.json
+docker-compose build --no-cache api && docker-compose up -d api
+```
+
+#### Apenas banco de dados
+
+```bash
+# Subir apenas o PostgreSQL
+docker-compose up -d postgres
+```
+
+#### Comandos úteis
+
+```bash
 # Parar containers
 docker-compose down
 
-# Parar e remover volumes
+# Parar e remover volumes (apaga dados do banco)
 docker-compose down -v
+
+# Ver status dos containers
+docker-compose ps
 ```
+
+#### Acessos disponíveis
+
+| Serviço        | URL                            |
+| -------------- | ------------------------------ |
+| **API**        | http://localhost:3000          |
+| **Swagger**    | http://localhost:3000/api/docs |
+| **PostgreSQL** | localhost:5432                 |
 
 ---
 
