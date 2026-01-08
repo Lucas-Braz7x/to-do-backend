@@ -19,8 +19,8 @@ export class Task extends AuditCreatedUpdated {
   title: string;
 
   @IsString()
-  @IsNotEmpty()
-  description: string;
+  @IsOptional()
+  description?: string | null;
 
   @IsEnum(TaskStatus)
   @IsNotEmpty()
