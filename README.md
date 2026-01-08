@@ -1,98 +1,644 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Desafio Backend - API de Gerenciamento de Tarefas
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API RESTful para gerenciamento de tarefas com autenticação JWT, construída com NestJS e Prisma.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📋 Índice
 
-## Description
+- [Visão Geral](#visão-geral)
+- [Tecnologias](#tecnologias)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Instalação](#instalação)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Banco de Dados](#banco-de-dados)
+- [Endpoints da API](#endpoints-da-api)
+- [Autenticação](#autenticação)
+- [Testes](#testes)
+- [Deploy](#deploy)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Visão Geral
 
-```bash
-$ yarn install
+Esta API permite que usuários:
+
+- Se registrem e autentiquem usando email e senha
+- Gerenciem suas tarefas pessoais (criar, listar, editar, deletar)
+- Visualizem apenas suas próprias tarefas (isolamento por usuário)
+
+Principais características:
+
+- ✅ Autenticação JWT
+- ✅ Soft delete de tarefas (com possibilidade de restauração)
+- ✅ Validação de dados com class-validator
+- ✅ Testes unitários e E2E
+- ✅ Pronto para deploy no Render
+
+---
+
+## Tecnologias
+
+| Tecnologia     | Versão  | Descrição                                     |
+| -------------- | ------- | --------------------------------------------- |
+| **NestJS**     | ^11.0.1 | Framework Node.js para aplicações server-side |
+| **Prisma**     | ^6.9.0  | ORM moderno para Node.js e TypeScript         |
+| **PostgreSQL** | 16      | Banco de dados relacional                     |
+| **JWT**        | -       | Autenticação stateless via tokens             |
+| **bcrypt**     | ^6.0.0  | Hash de senhas                                |
+| **Jest**       | ^30.0.0 | Framework de testes                           |
+| **TypeScript** | ^5.7.3  | Superset tipado de JavaScript                 |
+
+---
+
+## Estrutura do Projeto
+
+```
+src/
+├── main.ts                    # Ponto de entrada da aplicação
+├── app.module.ts              # Módulo raiz
+├── app.controller.ts          # Controller principal
+├── app.service.ts             # Service principal
+└── modules/
+    ├── auth/                  # Módulo de autenticação
+    │   ├── decorators/        # @CurrentUser, @Public
+    │   ├── dto/               # LoginDto, RegisterDto
+    │   ├── guards/            # JwtAuthGuard
+    │   ├── presentation/      # AuthController
+    │   ├── services/          # AuthService
+    │   └── strategies/        # JwtStrategy
+    ├── prisma/                # Módulo do Prisma
+    │   └── services/          # PrismaService
+    ├── tasks/                 # Módulo de tarefas
+    │   ├── dto/               # CreateTaskDto, UpdateTaskDto
+    │   ├── entities/          # Task entity
+    │   ├── presentation/      # TasksController
+    │   ├── repositories/      # TaskRepository
+    │   └── services/          # TasksService
+    └── users/                 # Módulo de usuários
+        ├── dto/               # CreateUserDto, UpdateUserDto
+        ├── entities/          # User entity
+        ├── presentation/      # UsersController
+        ├── repositories/      # UserRepository
+        └── services/          # UsersService
 ```
 
-## Compile and run the project
+---
+
+## Instalação
+
+### Pré-requisitos
+
+- Node.js (v18+)
+- Yarn ou npm
+- Docker (opcional, para PostgreSQL)
+
+### Passo a passo
+
+1. **Clone o repositório**
 
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+git clone <url-do-repositorio>
+cd backend
 ```
 
-## Run tests
+2. **Instale as dependências**
 
 ```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+yarn install
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+3. **Configure as variáveis de ambiente**
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+4. **Inicie o banco de dados (Docker)**
 
-## Resources
+```bash
+docker-compose up -d
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+5. **Execute as migrations**
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+npx prisma migrate dev
+```
 
-## Support
+6. **Gere o cliente Prisma**
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+yarn prisma:generate
+```
 
-## Stay in touch
+7. **Inicie a aplicação**
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Desenvolvimento
+yarn start:dev
 
-## License
+# Produção
+yarn build
+yarn start:prod
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+A API estará disponível em `http://localhost:3000`
+
+---
+
+## Variáveis de Ambiente
+
+| Variável       | Descrição                             | Exemplo                                                    |
+| -------------- | ------------------------------------- | ---------------------------------------------------------- |
+| `DATABASE_URL` | URL de conexão do PostgreSQL          | `postgresql://postgres:postgres@localhost:5432/desafio_db` |
+| `JWT_SECRET`   | Chave secreta para assinar tokens JWT | `sua-chave-secreta-muito-segura`                           |
+| `PORT`         | Porta da aplicação (opcional)         | `3000`                                                     |
+| `NODE_ENV`     | Ambiente de execução                  | `development` \| `production`                              |
+
+---
+
+## Banco de Dados
+
+### Schema
+
+O banco de dados possui duas tabelas principais:
+
+#### Tabela `usuarios`
+
+| Campo       | Tipo     | Descrição                  |
+| ----------- | -------- | -------------------------- |
+| `id`        | UUID     | Identificador único        |
+| `email`     | String   | Email único do usuário     |
+| `name`      | String   | Nome do usuário            |
+| `password`  | String   | Senha hasheada (bcrypt)    |
+| `createdAt` | DateTime | Data de criação            |
+| `updatedAt` | DateTime | Data da última atualização |
+
+#### Tabela `tarefas`
+
+| Campo         | Tipo      | Descrição                                     |
+| ------------- | --------- | --------------------------------------------- |
+| `id`          | UUID      | Identificador único                           |
+| `title`       | String    | Título da tarefa                              |
+| `description` | String    | Descrição da tarefa                           |
+| `status`      | Enum      | Status: `PENDING`, `IN_PROGRESS`, `COMPLETED` |
+| `createdAt`   | DateTime  | Data de criação                               |
+| `updatedAt`   | DateTime  | Data da última atualização                    |
+| `deletedAt`   | DateTime? | Data de exclusão (soft delete)                |
+| `userId`      | UUID      | ID do usuário proprietário                    |
+
+### Diagrama de Relacionamento
+
+```
+┌─────────────┐       ┌─────────────┐
+│   usuarios  │       │   tarefas   │
+├─────────────┤       ├─────────────┤
+│ id (PK)     │──────<│ userId (FK) │
+│ email       │       │ id (PK)     │
+│ name        │       │ title       │
+│ password    │       │ description │
+│ createdAt   │       │ status      │
+│ updatedAt   │       │ createdAt   │
+└─────────────┘       │ updatedAt   │
+                      │ deletedAt   │
+                      └─────────────┘
+```
+
+---
+
+## Endpoints da API
+
+### Autenticação (`/auth`)
+
+| Método | Endpoint         | Autenticação | Descrição                          |
+| ------ | ---------------- | ------------ | ---------------------------------- |
+| `POST` | `/auth/register` | ❌ Pública   | Registrar novo usuário             |
+| `POST` | `/auth/login`    | ❌ Pública   | Fazer login                        |
+| `GET`  | `/auth/me`       | ✅ JWT       | Obter dados do usuário autenticado |
+
+#### POST /auth/register
+
+Registra um novo usuário.
+
+**Request Body:**
+
+```json
+{
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "password": "senha123"
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid-do-usuario",
+    "email": "joao@email.com",
+    "name": "João Silva"
+  }
+}
+```
+
+**Erros:**
+
+- `409 Conflict` - Email já está em uso
+
+---
+
+#### POST /auth/login
+
+Autentica um usuário existente.
+
+**Request Body:**
+
+```json
+{
+  "email": "joao@email.com",
+  "password": "senha123"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid-do-usuario",
+    "email": "joao@email.com",
+    "name": "João Silva"
+  }
+}
+```
+
+**Erros:**
+
+- `401 Unauthorized` - Credenciais inválidas
+
+---
+
+#### GET /auth/me
+
+Retorna os dados do usuário autenticado.
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+
+```json
+{
+  "id": "uuid-do-usuario",
+  "email": "joao@email.com",
+  "name": "João Silva",
+  "createdAt": "2026-01-07T12:00:00.000Z",
+  "updatedAt": "2026-01-07T12:00:00.000Z"
+}
+```
+
+---
+
+### Tarefas (`/tasks`)
+
+> ⚠️ Todos os endpoints de tarefas requerem autenticação JWT
+
+| Método   | Endpoint             | Descrição                    |
+| -------- | -------------------- | ---------------------------- |
+| `POST`   | `/tasks`             | Criar nova tarefa            |
+| `GET`    | `/tasks`             | Listar tarefas do usuário    |
+| `GET`    | `/tasks/:id`         | Buscar tarefa por ID         |
+| `PATCH`  | `/tasks/:id`         | Atualizar tarefa             |
+| `DELETE` | `/tasks/:id`         | Deletar tarefa (soft delete) |
+| `PATCH`  | `/tasks/:id/restore` | Restaurar tarefa deletada    |
+
+#### POST /tasks
+
+Cria uma nova tarefa para o usuário autenticado.
+
+**Request Body:**
+
+```json
+{
+  "title": "Estudar NestJS",
+  "description": "Completar o módulo de autenticação",
+  "status": "PENDING"
+}
+```
+
+> O campo `status` é opcional e assume `PENDING` como padrão.
+
+**Valores válidos para status:**
+
+- `PENDING` - Pendente
+- `IN_PROGRESS` - Em andamento
+- `COMPLETED` - Concluída
+
+**Response (201):**
+
+```json
+{
+  "id": "uuid-da-tarefa",
+  "title": "Estudar NestJS",
+  "description": "Completar o módulo de autenticação",
+  "status": "PENDING",
+  "createdAt": "2026-01-07T12:00:00.000Z",
+  "updatedAt": "2026-01-07T12:00:00.000Z",
+  "deletedAt": null,
+  "userId": "uuid-do-usuario"
+}
+```
+
+---
+
+#### GET /tasks
+
+Lista todas as tarefas do usuário autenticado (exceto deletadas).
+
+**Response (200):**
+
+```json
+[
+  {
+    "id": "uuid-da-tarefa",
+    "title": "Estudar NestJS",
+    "description": "Completar o módulo de autenticação",
+    "status": "PENDING",
+    "createdAt": "2026-01-07T12:00:00.000Z",
+    "updatedAt": "2026-01-07T12:00:00.000Z",
+    "deletedAt": null,
+    "userId": "uuid-do-usuario"
+  }
+]
+```
+
+---
+
+#### GET /tasks/:id
+
+Busca uma tarefa específica por ID.
+
+**Response (200):**
+
+```json
+{
+  "id": "uuid-da-tarefa",
+  "title": "Estudar NestJS",
+  "description": "Completar o módulo de autenticação",
+  "status": "PENDING",
+  "createdAt": "2026-01-07T12:00:00.000Z",
+  "updatedAt": "2026-01-07T12:00:00.000Z",
+  "deletedAt": null,
+  "userId": "uuid-do-usuario"
+}
+```
+
+**Erros:**
+
+- `404 Not Found` - Tarefa não encontrada
+
+---
+
+#### PATCH /tasks/:id
+
+Atualiza uma tarefa existente.
+
+**Request Body:** (todos os campos são opcionais)
+
+```json
+{
+  "title": "Estudar NestJS - Avançado",
+  "description": "Nova descrição",
+  "status": "IN_PROGRESS"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "id": "uuid-da-tarefa",
+  "title": "Estudar NestJS - Avançado",
+  "description": "Nova descrição",
+  "status": "IN_PROGRESS",
+  "createdAt": "2026-01-07T12:00:00.000Z",
+  "updatedAt": "2026-01-07T14:00:00.000Z",
+  "deletedAt": null,
+  "userId": "uuid-do-usuario"
+}
+```
+
+**Erros:**
+
+- `404 Not Found` - Tarefa não encontrada
+
+---
+
+#### DELETE /tasks/:id
+
+Deleta uma tarefa (soft delete - marca `deletedAt`).
+
+**Response (200):**
+
+```json
+{
+  "id": "uuid-da-tarefa",
+  "title": "Estudar NestJS",
+  "description": "Completar o módulo de autenticação",
+  "status": "PENDING",
+  "createdAt": "2026-01-07T12:00:00.000Z",
+  "updatedAt": "2026-01-07T14:00:00.000Z",
+  "deletedAt": "2026-01-07T15:00:00.000Z",
+  "userId": "uuid-do-usuario"
+}
+```
+
+**Erros:**
+
+- `404 Not Found` - Tarefa não encontrada
+
+---
+
+#### PATCH /tasks/:id/restore
+
+Restaura uma tarefa previamente deletada.
+
+**Response (200):**
+
+```json
+{
+  "id": "uuid-da-tarefa",
+  "title": "Estudar NestJS",
+  "description": "Completar o módulo de autenticação",
+  "status": "PENDING",
+  "createdAt": "2026-01-07T12:00:00.000Z",
+  "updatedAt": "2026-01-07T16:00:00.000Z",
+  "deletedAt": null,
+  "userId": "uuid-do-usuario"
+}
+```
+
+**Erros:**
+
+- `404 Not Found` - Tarefa não encontrada ou não está deletada
+
+---
+
+### Usuários (`/users`)
+
+> ⚠️ Todos os endpoints de usuários requerem autenticação JWT
+
+| Método   | Endpoint     | Descrição                |
+| -------- | ------------ | ------------------------ |
+| `POST`   | `/users`     | Criar usuário            |
+| `GET`    | `/users`     | Listar todos os usuários |
+| `GET`    | `/users/:id` | Buscar usuário por ID    |
+| `PATCH`  | `/users/:id` | Atualizar usuário        |
+| `DELETE` | `/users/:id` | Remover usuário          |
+
+---
+
+## Autenticação
+
+A API utiliza **JWT (JSON Web Token)** para autenticação.
+
+### Como funciona
+
+1. O usuário faz login ou registro e recebe um `accessToken`
+2. O token deve ser enviado no header `Authorization` de todas as requisições protegidas
+3. Formato: `Authorization: Bearer <token>`
+
+### Estrutura do Token
+
+O payload do JWT contém:
+
+```json
+{
+  "sub": "uuid-do-usuario",
+  "email": "usuario@email.com",
+  "iat": 1704628800,
+  "exp": 1704715200
+}
+```
+
+### Rotas Públicas
+
+As únicas rotas que não requerem autenticação são:
+
+- `POST /auth/register`
+- `POST /auth/login`
+
+Todas as outras rotas são protegidas pelo `JwtAuthGuard` global.
+
+---
+
+## Testes
+
+O projeto inclui testes unitários e E2E.
+
+### Executar testes unitários
+
+```bash
+yarn test
+```
+
+### Executar testes com watch
+
+```bash
+yarn test:watch
+```
+
+### Executar testes com cobertura
+
+```bash
+yarn test:cov
+```
+
+### Executar testes E2E
+
+```bash
+yarn test:e2e
+```
+
+### Executar todos os testes
+
+```bash
+yarn test:all
+```
+
+---
+
+## Deploy
+
+### Render
+
+O projeto está configurado para deploy no Render via `render.yaml`.
+
+**Configuração:**
+
+- Runtime: Node.js
+- Build: `yarn install && yarn prisma:generate && yarn build`
+- Start: `yarn start:prod`
+- Região: Oregon
+
+**Variáveis de ambiente necessárias no Render:**
+
+- `DATABASE_URL` - URL do banco PostgreSQL
+- `JWT_SECRET` - Chave secreta para JWT
+
+### Docker
+
+Para desenvolvimento local com Docker:
+
+```bash
+# Subir apenas o banco de dados
+docker-compose up -d
+
+# Parar containers
+docker-compose down
+
+# Parar e remover volumes
+docker-compose down -v
+```
+
+---
+
+## Scripts Disponíveis
+
+| Script                 | Descrição                                   |
+| ---------------------- | ------------------------------------------- |
+| `yarn start:dev`       | Inicia em modo desenvolvimento (hot-reload) |
+| `yarn start:prod`      | Inicia em modo produção                     |
+| `yarn build`           | Compila o projeto                           |
+| `yarn test`            | Executa testes unitários                    |
+| `yarn test:e2e`        | Executa testes E2E                          |
+| `yarn test:cov`        | Executa testes com cobertura                |
+| `yarn lint`            | Verifica e corrige linting                  |
+| `yarn format`          | Formata o código                            |
+| `yarn prisma:generate` | Gera o cliente Prisma                       |
+
+---
+
+## Códigos de Erro HTTP
+
+| Código | Descrição                               |
+| ------ | --------------------------------------- |
+| `200`  | Sucesso                                 |
+| `201`  | Criado com sucesso                      |
+| `400`  | Requisição inválida (validação falhou)  |
+| `401`  | Não autorizado (token inválido/ausente) |
+| `404`  | Recurso não encontrado                  |
+| `409`  | Conflito (ex: email já existe)          |
+| `500`  | Erro interno do servidor                |
+
+---
+
+## Licença
+
+Este projeto não possui licença pública (UNLICENSED).
