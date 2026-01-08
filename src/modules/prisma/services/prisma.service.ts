@@ -36,4 +36,13 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get client(): PrismaClient {
     return this.prisma;
   }
+
+  async isHealthy(): Promise<boolean> {
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
