@@ -34,8 +34,8 @@ export class TasksService {
     return this.taskRepository.findByUserId(userId);
   }
 
-  async findOne(id: string): Promise<Task> {
-    const task = await this.taskRepository.findById(id);
+  async findOne(id: string, userId: string): Promise<Task> {
+    const task = await this.taskRepository.findByIdAndUserId(id, userId);
     if (!task) {
       throw new NotFoundException(`Tarefa com ID ${id} não encontrada`);
     }
@@ -44,22 +44,27 @@ export class TasksService {
 
   async update({
     id,
+    userId,
     data,
   }: {
     id: string;
+    userId: string;
     data: UpdateTaskDto;
   }): Promise<Task> {
-    await this.findOne(id);
+    await this.findOne(id, userId);
     return this.taskRepository.update({ id, data });
   }
 
-  async remove(id: string): Promise<Task> {
-    await this.findOne(id);
+  async remove(id: string, userId: string): Promise<Task> {
+    await this.findOne(id, userId);
     return this.taskRepository.softDelete(id);
   }
 
-  async restore(id: string): Promise<Task> {
-    const task = await this.taskRepository.findByIdIncludingDeleted(id);
+  async restore(id: string, userId: string): Promise<Task> {
+    const task = await this.taskRepository.findByIdAndUserIdIncludingDeleted(
+      id,
+      userId,
+    );
     if (!task) {
       throw new NotFoundException(`Tarefa com ID ${id} não encontrada`);
     }

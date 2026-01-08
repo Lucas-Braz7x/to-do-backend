@@ -31,9 +31,24 @@ export class TaskRepository {
     });
   }
 
+  async findByIdAndUserId(id: string, userId: string): Promise<Task | null> {
+    return this.prisma.client.task.findFirst({
+      where: { id, userId, deletedAt: null },
+    });
+  }
+
   async findByIdIncludingDeleted(id: string): Promise<Task | null> {
     return this.prisma.client.task.findUnique({
       where: { id },
+    });
+  }
+
+  async findByIdAndUserIdIncludingDeleted(
+    id: string,
+    userId: string,
+  ): Promise<Task | null> {
+    return this.prisma.client.task.findFirst({
+      where: { id, userId },
     });
   }
 

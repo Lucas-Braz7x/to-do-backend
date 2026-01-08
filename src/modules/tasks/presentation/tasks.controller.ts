@@ -33,29 +33,39 @@ export class TasksController {
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string): Promise<Task> {
-    const task = await this.tasksService.findOne(id);
+  async findById(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<Task> {
+    const task = await this.tasksService.findOne(id, userId);
     return task;
   }
 
   @Patch(':id')
   async update(
     @Param('id') id: string,
+    @CurrentUser('id') userId: string,
     @Body() data: UpdateTaskDto,
   ): Promise<Task> {
-    const task = await this.tasksService.update({ id, data });
+    const task = await this.tasksService.update({ id, userId, data });
     return task;
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<Task> {
-    const task = await this.tasksService.remove(id);
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<Task> {
+    const task = await this.tasksService.remove(id, userId);
     return task;
   }
 
   @Patch(':id/restore')
-  async restore(@Param('id') id: string): Promise<Task> {
-    const task = await this.tasksService.restore(id);
+  async restore(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<Task> {
+    const task = await this.tasksService.restore(id, userId);
     return task;
   }
 }

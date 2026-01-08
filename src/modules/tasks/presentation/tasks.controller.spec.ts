@@ -86,14 +86,15 @@ describe('TasksController', () => {
   });
 
   describe('findById', () => {
-    it('should call tasksService.findOne with task id', async () => {
+    it('should call tasksService.findOne with task id and userId', async () => {
       const taskId = 'task-uuid-1';
+      const userId = 'user-uuid-1';
 
       mockTasksService.findOne.mockResolvedValue(mockTask);
 
-      const result = await controller.findById(taskId);
+      const result = await controller.findById(taskId, userId);
 
-      expect(mockTasksService.findOne).toHaveBeenCalledWith(taskId);
+      expect(mockTasksService.findOne).toHaveBeenCalledWith(taskId, userId);
       expect(result).toEqual(mockTask);
     });
   });
@@ -101,6 +102,7 @@ describe('TasksController', () => {
   describe('update', () => {
     it('should call tasksService.update with correct params', async () => {
       const taskId = 'task-uuid-1';
+      const userId = 'user-uuid-1';
       const updateTaskDto: UpdateTaskDto = {
         title: 'Updated Title',
         status: TaskStatus.COMPLETED,
@@ -109,10 +111,11 @@ describe('TasksController', () => {
 
       mockTasksService.update.mockResolvedValue(updatedTask);
 
-      const result = await controller.update(taskId, updateTaskDto);
+      const result = await controller.update(taskId, userId, updateTaskDto);
 
       expect(mockTasksService.update).toHaveBeenCalledWith({
         id: taskId,
+        userId,
         data: updateTaskDto,
       });
       expect(result).toEqual(updatedTask);
@@ -120,29 +123,31 @@ describe('TasksController', () => {
   });
 
   describe('remove', () => {
-    it('should call tasksService.remove with task id', async () => {
+    it('should call tasksService.remove with task id and userId', async () => {
       const taskId = 'task-uuid-1';
+      const userId = 'user-uuid-1';
       const deletedTask = { ...mockTask, deletedAt: new Date() };
 
       mockTasksService.remove.mockResolvedValue(deletedTask);
 
-      const result = await controller.remove(taskId);
+      const result = await controller.remove(taskId, userId);
 
-      expect(mockTasksService.remove).toHaveBeenCalledWith(taskId);
+      expect(mockTasksService.remove).toHaveBeenCalledWith(taskId, userId);
       expect(result).toEqual(deletedTask);
     });
   });
 
   describe('restore', () => {
-    it('should call tasksService.restore with task id', async () => {
+    it('should call tasksService.restore with task id and userId', async () => {
       const taskId = 'task-uuid-1';
+      const userId = 'user-uuid-1';
       const restoredTask = { ...mockTask, deletedAt: null };
 
       mockTasksService.restore.mockResolvedValue(restoredTask);
 
-      const result = await controller.restore(taskId);
+      const result = await controller.restore(taskId, userId);
 
-      expect(mockTasksService.restore).toHaveBeenCalledWith(taskId);
+      expect(mockTasksService.restore).toHaveBeenCalledWith(taskId, userId);
       expect(result).toEqual(restoredTask);
     });
   });
