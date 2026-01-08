@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { AppService, HealthCheckResponse } from './app.service';
 import { Public } from './modules/auth/decorators/public.decorator';
 
 @Controller()
@@ -10,5 +10,11 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Public()
+  @Get('health')
+  async healthCheck(): Promise<HealthCheckResponse> {
+    return this.appService.checkHealth();
   }
 }

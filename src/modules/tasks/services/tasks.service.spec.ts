@@ -164,13 +164,13 @@ describe('TasksService', () => {
   });
 
   describe('findOne', () => {
-    it('should return a task by ID', async () => {
+    it('should return a task by ID and userId', async () => {
       const createdTask = await service.create({
         userId: testUserId,
         data: { title: 'Task to Find', description: 'Desc' },
       });
 
-      const result = await service.findOne(createdTask.id);
+      const result = await service.findOne(createdTask.id, testUserId);
 
       expect(result).toMatchObject({
         id: createdTask.id,
@@ -182,12 +182,25 @@ describe('TasksService', () => {
     it('should throw NotFoundException when task does not exist', async () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
-      await expect(service.findOne(nonExistentId)).rejects.toThrow(
+      await expect(service.findOne(nonExistentId, testUserId)).rejects.toThrow(
         NotFoundException,
       );
-      await expect(service.findOne(nonExistentId)).rejects.toThrow(
+      await expect(service.findOne(nonExistentId, testUserId)).rejects.toThrow(
         `Tarefa com ID ${nonExistentId} não encontrada`,
       );
+    });
+
+    it('should throw NotFoundException when task belongs to another user', async () => {
+      const createdTask = await service.create({
+        userId: testUserId,
+        data: { title: 'Task to Find', description: 'Desc' },
+      });
+
+      const otherUserId = '00000000-0000-0000-0000-000000000001';
+
+      await expect(
+        service.findOne(createdTask.id, otherUserId),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -205,6 +218,7 @@ describe('TasksService', () => {
 
       const result = await service.update({
         id: createdTask.id,
+        userId: testUserId,
         data: updateTaskDto,
       });
 
@@ -220,7 +234,29 @@ describe('TasksService', () => {
       const updateTaskDto: UpdateTaskDto = { title: 'Updated Title' };
 
       await expect(
-        service.update({ id: nonExistentId, data: updateTaskDto }),
+        service.update({
+          id: nonExistentId,
+          userId: testUserId,
+          data: updateTaskDto,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when task belongs to another user', async () => {
+      const createdTask = await service.create({
+        userId: testUserId,
+        data: { title: 'Original Task', description: 'Original Desc' },
+      });
+
+      const otherUserId = '00000000-0000-0000-0000-000000000001';
+      const updateTaskDto: UpdateTaskDto = { title: 'Updated Title' };
+
+      await expect(
+        service.update({
+          id: createdTask.id,
+          userId: otherUserId,
+          data: updateTaskDto,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -232,7 +268,7 @@ describe('TasksService', () => {
         data: { title: 'Task to Delete', description: 'Desc' },
       });
 
-      const result = await service.remove(createdTask.id);
+      const result = await service.remove(createdTask.id, testUserId);
 
       expect(result).toMatchObject({
         id: createdTask.id,
@@ -241,7 +277,7 @@ describe('TasksService', () => {
       expect(result.deletedAt).not.toBeNull();
 
       // Verify it no longer appears in normal searches
-      await expect(service.findOne(createdTask.id)).rejects.toThrow(
+      await expect(service.findOne(createdTask.id, testUserId)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -249,7 +285,20 @@ describe('TasksService', () => {
     it('should throw NotFoundException when task does not exist', async () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
-      await expect(service.remove(nonExistentId)).rejects.toThrow(
+      await expect(service.remove(nonExistentId, testUserId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw NotFoundException when task belongs to another user', async () => {
+      const createdTask = await service.create({
+        userId: testUserId,
+        data: { title: 'Task to Delete', description: 'Desc' },
+      });
+
+      const otherUserId = '00000000-0000-0000-0000-000000000001';
+
+      await expect(service.remove(createdTask.id, otherUserId)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -262,10 +311,10 @@ describe('TasksService', () => {
         userId: testUserId,
         data: { title: 'Task to Restore', description: 'Desc' },
       });
-      await service.remove(createdTask.id);
+      await service.remove(createdTask.id, testUserId);
 
       // Restore the task
-      const result = await service.restore(createdTask.id);
+      const result = await service.restore(createdTask.id, testUserId);
 
       expect(result).toMatchObject({
         id: createdTask.id,
@@ -274,17 +323,17 @@ describe('TasksService', () => {
       });
 
       // Verify it appears again in searches
-      const found = await service.findOne(createdTask.id);
+      const found = await service.findOne(createdTask.id, testUserId);
       expect(found).toBeDefined();
     });
 
     it('should throw NotFoundException when task does not exist', async () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
-      await expect(service.restore(nonExistentId)).rejects.toThrow(
+      await expect(service.restore(nonExistentId, testUserId)).rejects.toThrow(
         NotFoundException,
       );
-      await expect(service.restore(nonExistentId)).rejects.toThrow(
+      await expect(service.restore(nonExistentId, testUserId)).rejects.toThrow(
         `Tarefa com ID ${nonExistentId} não encontrada`,
       );
     });
@@ -295,12 +344,26 @@ describe('TasksService', () => {
         data: { title: 'Active Task', description: 'Desc' },
       });
 
-      await expect(service.restore(createdTask.id)).rejects.toThrow(
+      await expect(service.restore(createdTask.id, testUserId)).rejects.toThrow(
         NotFoundException,
       );
-      await expect(service.restore(createdTask.id)).rejects.toThrow(
+      await expect(service.restore(createdTask.id, testUserId)).rejects.toThrow(
         `Tarefa com ID ${createdTask.id} não está deletada`,
       );
+    });
+
+    it('should throw NotFoundException when task belongs to another user', async () => {
+      const createdTask = await service.create({
+        userId: testUserId,
+        data: { title: 'Task to Restore', description: 'Desc' },
+      });
+      await service.remove(createdTask.id, testUserId);
+
+      const otherUserId = '00000000-0000-0000-0000-000000000001';
+
+      await expect(
+        service.restore(createdTask.id, otherUserId),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -311,7 +374,7 @@ describe('TasksService', () => {
         userId: testUserId,
         data: { title: 'Deleted Task', description: 'Desc' },
       });
-      await service.remove(taskToDelete.id);
+      await service.remove(taskToDelete.id, testUserId);
 
       // Create an active task
       await service.create({
